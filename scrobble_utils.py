@@ -225,14 +225,14 @@ class SmartScrobbler:
         # --- STRICT METADATA CHECK ---
         # Filters out "Video" states or incomplete loads that cause double scrobbles.
         # We use .get() to avoid KeyErrors if a field is missing entirely.
-        if not (song.get('artist') and song.get('title') and song.get('album')):
+        if not (song.get('artist') and song.get('title')):
             # Optional: detailed logging if you need to debug specific skipped tracks
             # print(f"  ⏭️  Skipping: '{song.get('title', 'Unknown')}' - Missing metadata")
             return False
         # -----------------------------
 
         params = {
-            'album': self._sanitize_string(song['album']),
+            'album': self._sanitize_string(song.get('album') or ''),
             'api_key': self.last_fm_api_key,
             'method': 'track.scrobble',
             'timestamp': timestamp,
@@ -441,7 +441,8 @@ class PositionTracker:
         # the real time/order in the history list.
         valid_songs_with_indices = []
         for i, song in enumerate(today_songs):
-            if song.get('artist') and song.get('title') and song.get('album'):
+            if song.get('artist') and song.get('title'):
+                song['album'] = song.get('album') or ''
                 valid_songs_with_indices.append((i, song))
         # ---------------------
         
@@ -469,12 +470,12 @@ class PositionTracker:
             for db_song in database_songs:
                 db_title = db_song.get('title') or db_song.get('track_name')
                 db_artist = db_song.get('artist') or db_song.get('artist_name')
-                db_album = db_song.get('album') or db_song.get('album_name')
+                db_album = db_song.get('album') or db_song.get('album_name') or ''
                 db_map[(db_title, db_artist, db_album)] = db_song
 
             for i, song in valid_songs_with_indices:
                 current_position = i + 1
-                saved_song = db_map.get((song['title'], song['artist'], song['album']))
+                saved_song = db_map.get((song['title'], song['artist'], song.get('album') or ''))
                 
                 if not saved_song:
                     # New song - scrobble it

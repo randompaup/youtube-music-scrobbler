@@ -348,10 +348,10 @@ class ImprovedProcess:
         is_first_time = len(database_songs) == 0
         
         if database_songs:
-            today_keys = {(t['title'], t['artist'], t['album']) for t in today_songs}
+            today_keys = {(t['title'], t['artist'], t.get('album') or '') for t in today_songs}
             songs_to_delete = [
                 db_song for db_song in database_songs
-                if (db_song['title'], db_song['artist'], db_song['album']) not in today_keys
+                if (db_song['title'], db_song['artist'], db_song.get('album') or '') not in today_keys
             ]
 
             if songs_to_delete:
@@ -431,11 +431,12 @@ class ImprovedProcess:
                                     love_failed_songs.append(f"{song['title']} — {song['artist']}")
                     else:
                         failed_songs.append(f"{song['title']} by {song['artist']}")
+                        continue
                 
                 reason = item.get('reason')
                 should_scrobble = item.get('should_scrobble', False)
 
-                song_key = (song['title'], song['artist'], song['album'])
+                song_key = (song['title'], song['artist'], song.get('album') or '')
                 existing_song = scrobbles_map.get(song_key)
                 
                 if existing_song:
@@ -447,7 +448,7 @@ class ImprovedProcess:
                     scrobbles_map[song_key] = (song_id, new_max, new_play_count)
                 else:
                     initial_play_count = 1
-                    cursor.execute('INSERT INTO scrobbles (track_name, artist_name, album_name, array_position, max_array_position, is_first_time_scrobble, play_count) VALUES (?, ?, ?, ?, ?, ?, ?)', (song['title'], song['artist'], song['album'], position, position, is_first_time, initial_play_count))
+                    cursor.execute('INSERT INTO scrobbles (track_name, artist_name, album_name, array_position, max_array_position, is_first_time_scrobble, play_count) VALUES (?, ?, ?, ?, ?, ?, ?)', (song['title'], song['artist'], song.get('album') or '', position, position, is_first_time, initial_play_count))
                     song_id = cursor.lastrowid
                     scrobbles_map[song_key] = (song_id, position, initial_play_count)
                 
@@ -498,7 +499,7 @@ class ImprovedProcess:
             report_now=report_now
         )
 
-        return True
+        return len(failed_songs) == 0
 
 def main():
     """Main entry point"""
