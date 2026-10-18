@@ -2,7 +2,7 @@ name: YouTube Music Scrobble Sync
 
 on:
   schedule:
-    - cron: '17,47 * * * *' # Every 30 minutes at odd minute offsets (:17 and :47)
+    - cron: '17 * * * *' # Every hour
   push:
     branches: [master] # Trigger on push to master branch
   workflow_dispatch: # Allows manual triggering from GitHub UI
